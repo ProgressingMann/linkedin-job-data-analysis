@@ -3,6 +3,8 @@ import os
 import requests
 import tqdm
 import mysql.connector
+import sys
+
 from AWS_access_management import host, dbname, user, pwd, port, aws_access_key_id, aws_secret_access_key
 
 def get_rds_connection():
@@ -126,7 +128,7 @@ def get_dynamodb_con():
     ddb_jobs_con = None
     try:
         ddb_jobs_con = dynamo_client.Table('Jobs')
-        print(f'Status of the Table in DynamoDB is {ddb_jobs_con.table_status}')
+        # print(f'Status of the Table in DynamoDB is {ddb_jobs_con.table_status}')
     
     except Exception as e:
         print("ERROR!")
@@ -136,9 +138,36 @@ def get_dynamodb_con():
     return ddb_jobs_con
 
 
+def get_all_dynamodb_items(ddb_table):
+    lastEvaluatedKey = None
+    items = [] # Result Array
+
+    while True:
+        if lastEvaluatedKey == None:
+            response = ddb_table.scan() # This only runs the first time - provide no ExclusiveStartKey initially
+        else:
+            response = ddb_table.scan(
+            ExclusiveStartKey=lastEvaluatedKey # In subsequent calls, provide the ExclusiveStartKey
+        )
+
+        items.extend(response['Items']) # Appending to our resultset list
+        
+
+        # Set our lastEvlauatedKey to the value for next operation,
+        # else, there's no more results and we can exit
+        if 'LastEvaluatedKey' in response:
+            lastEvaluatedKey = response['LastEvaluatedKey']
+        else:
+            break
+
+    return items
+
 def store_job_description_dynamo_db(json):
     ddb_jobs_con = get_dynamodb_con()
     ddb_jobs_con.put_item(Item = json)
+    if json:
+        job_id = json['job_id']
+        # print(f'stored record for job id {job_id} into DynamoDB successfully')
 
 
 def delete_all_dynamo_db_jobs():

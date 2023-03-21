@@ -15,7 +15,7 @@ default_args = {
 }
 
 parallel_tasks = 4
-num_scrapes = 48
+num_scrapes = 52
 
 with DAG(
     dag_id='scrape_jds_new_jobs',

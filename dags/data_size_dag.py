@@ -28,16 +28,24 @@ with DAG(
         rds_scraped_jds = rds_get_records(query)[0][0]
         print("RDS scraped JDs length is : ", rds_scraped_jds)
 
+        ddb_client = get_dynamodb_con()
+        ddb_table_jobs = dynamo_client.Table('Jobs')
+        items_len = len(get_all_dynamodb_items(ddb_table_jobs))
+
+        print("Dynamo DB length is ", items_len)
+
     @task
     def get_dataset_len():
+        
         query = "SELECT COUNT(*) FROM jobs_info"
         rds_len = rds_get_records(query)[0][0]
         get_num_scraped_jobs_cnt()
-
-        ddb_jobs_con = get_dynamodb_con()
-        ddb_len = len(ddb_jobs_con.scan()['Items'])
-
         print("RDS total length is ", rds_len)
-        print("Dynamo DB length is ", ddb_len)
+
+        ddb_client = get_dynamodb_con()
+        ddb_table_jobs = dynamo_client.Table('Jobs')
+        items_len = len(get_all_dynamodb_items(ddb_table_jobs))
+
+        print("Dynamo DB length is ", items_len)
 
     get_dataset_len() >> get_num_scraped_jobs_cnt()

@@ -164,18 +164,22 @@ def store_job_description_data(job_id):
     view_job_url = 'https://www.linkedin.com/jobs/view/'
     job_des_resp = requests.get(view_job_url + job_id)
     job_des_soup = BeautifulSoup(job_des_resp.content)
-    
+
     elem_job_title = 'top-card-layout__title' # Job title
-    job_title = job_des_soup.find('h1', {'class': elem_job_title}).text.strip()
+    job_title = job_des_soup.find('h1', {'class': elem_job_title})
+    job_title = job_title.text.strip() if job_title else 'na'
     
     elem_company_name = 'topcard__org-name-link topcard__flavor--black-link' # name of the company
-    company_name = job_des_soup.find('a', {'class': elem_company_name}).text.strip()
+    company_name = job_des_soup.find('a', {'class': elem_company_name})
+    company_name = company_name.text.strip() if company_name else 'na'
     
     elem_location = 'topcard__flavor topcard__flavor--bullet' # job location
-    location = job_des_soup.find('span', {'class': elem_location}).text.strip()
-    
+    location = job_des_soup.find('span', {'class': elem_location})
+    location = location.text.strip() if location else 'na'
+
     elem_posted_ago = 'posted-time-ago__text' # when was the job posted
-    posted_ago = job_des_soup.find('span', {'class': elem_posted_ago}).text.strip()
+    posted_ago = job_des_soup.find('span', {'class': elem_posted_ago})
+    posted_ago = posted_ago.text.strip() if posted_ago else 'na'
     
     elem_num_applicants = 'num-applicants__figure' # total number of job applicants, when > 200
     num_applicants = job_des_soup.find('figure', {'class': elem_num_applicants})
@@ -184,10 +188,12 @@ def store_job_description_data(job_id):
         num_applicants = num_applicants.text.strip()
     else:
         elem_num_applicants = 'num-applicants__caption' # total number of job applicants, when < 200
-        num_applicants = job_des_soup.find('span', {'class': elem_num_applicants}).text.strip()
+        num_applicants = job_des_soup.find('span', {'class': elem_num_applicants})
+        num_applicants = num_applicants.text.strip() if num_applicants else 'na'
     
     elem_job_description = 'show-more-less-html__markup' # job description
-    job_description = job_des_soup.find('div', {'class': elem_job_description}).text.strip()
+    job_description = job_des_soup.find('div', {'class': elem_job_description})
+    job_description = job_description.text.strip() if job_description else 'na'
     
     job_criteria_soup = job_des_soup.findAll('li', {'class': 'description__job-criteria-item'})
     job_criteria_d = get_job_criteria_subheader(job_criteria_soup)
@@ -201,7 +207,7 @@ def store_job_description_data(job_id):
     update_records([values])
     store_job_description_dynamo_db({'job_id': job_id, 'job_title': job_title,
                                     'job_description': job_description})
-    
+
     return 
 
 # Data Scientist
