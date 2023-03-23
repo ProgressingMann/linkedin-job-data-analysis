@@ -7,8 +7,10 @@ import sys
 
 from AWS_access_management import host, dbname, user, pwd, port, aws_access_key_id, aws_secret_access_key
 
+
 def get_rds_connection():
      return mysql.connector.connect(host=host, database=dbname, user=user, password=pwd)
+
 
 def rds_execute_query(query):
     rds_con, cursor = None, None
@@ -31,6 +33,7 @@ def rds_execute_query(query):
 
         return None
     
+
 def rds_insert_update_records(query, records):
     rds_con, cursor = None, None
     records = list(records)
@@ -122,6 +125,16 @@ def split_job_ids(num_splits, limit=52):
     return split_values
 
 
+def rds_store_pls(new_records):
+    '''Used to store the programming languages mentioned in the job description'''
+
+    query = "INSERT INTO programming_languages (job_id, language) VALUES (%s, %s)"
+    for i in range(len(new_records)):
+        new_records[i] = tuple(new_records[i])
+    
+    rds_insert_update_records(query, new_records)
+    
+
 def get_dynamodb_con():
     dynamo_client = boto3.resource(service_name = 'dynamodb',region_name = 'us-east-2',
                 aws_access_key_id = aws_access_key_id, aws_secret_access_key = aws_secret_access_key)
@@ -152,7 +165,6 @@ def get_all_dynamodb_items(ddb_table):
 
         items.extend(response['Items']) # Appending to our resultset list
         
-
         # Set our lastEvlauatedKey to the value for next operation,
         # else, there's no more results and we can exit
         if 'LastEvaluatedKey' in response:
@@ -161,6 +173,7 @@ def get_all_dynamodb_items(ddb_table):
             break
 
     return items
+
 
 def store_job_description_dynamo_db(json):
     ddb_jobs_con = get_dynamodb_con()

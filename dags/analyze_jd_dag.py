@@ -2,6 +2,7 @@ import sys
 sys.path.append('/opt/airflow/dags/modules/')
 from db import *
 from scrape import *
+from analyze_data import *
 from airflow.operators.python import PythonOperator
 from airflow import DAG
 from datetime import datetime, timedelta
@@ -18,15 +19,14 @@ parallel_tasks = 4
 num_scrapes = 52
 
 with DAG(
-    dag_id='scrape_jds_new_jobs',
+    dag_id='analyze_jd_dag',
     default_args=default_args,
-    description='This dag will scrape job description for job IDs where scraped_jd=false and'\
-                'will store it on the AWS RDS and DynamoDB',
+    description='This dag will analyze the job description (jd) and will extract information like '\
+                'programming languages and libraries',
     start_date=datetime(2023, 3, 11, 10),
     catchup=False,
     schedule_interval='@daily'
 ) as dag:
-
     @task
     def get_split_job_ids(parallel_tasks=parallel_tasks, num_scrapes=num_scrapes):
         query = "SELECT COUNT(*) FROM jobs_info WHERE scraped_jd=false"
@@ -36,17 +36,10 @@ with DAG(
         return split_job_ids(parallel_tasks, limit=num_scrapes)
     
     @task
-    def scrape_jobs(job_ids):
+    def analyze_jobs(job_ids):
         for job_id in job_ids:
-            store_job_description_data(job_id)
-            sleep_time = np.random.uniform(2, 4)
-            print(f'sleeping for {sleep_time}')
-            time.sleep(sleep_time)
-    
-    
+
+
+
     job_ids_split = get_split_job_ids(parallel_tasks=parallel_tasks, num_scrapes=num_scrapes)
-    scrape_jobs.expand(job_ids=job_ids_split)
-
-
-# https://marclamberti.com/blog/dynamic-task-mapping-in-apache-airflow/
-# https://docs.astronomer.io/learn/dynamic-tasks?tab=taskflow#dynamic-task-concepts
+    analyze_jobs.expand(job_ids=job_ids_split)

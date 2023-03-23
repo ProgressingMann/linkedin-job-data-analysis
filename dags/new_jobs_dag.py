@@ -18,10 +18,10 @@ def helper_rds_store_unique_job_ids(ti):
     rds_store_unique_job_ids(new_job_ids)
     print(f"Successully added {len(new_job_ids)} new job ids")
 
-new_jobs_needed = 200
+new_jobs_needed = 100
 refresh=True
-posted_ago='week'
-title='data_engineer'
+posted_ago='month'
+title='data_scientist'
 
 with DAG(
     dag_id='get_new_job_ids',

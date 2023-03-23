@@ -81,6 +81,10 @@ def map_time(posted_ago):
     
     return f_TPR
 
+def more_jobs_available(soup):
+    if soup.find('div', {'data-column': '1'}) is None:
+        return False
+    return True
 
 def get_new_job_ids(total_jobs_loaded, refresh, posted_ago, title):
     
@@ -98,6 +102,12 @@ def get_new_job_ids(total_jobs_loaded, refresh, posted_ago, title):
     
     response = requests.get(url)
     soup = BeautifulSoup(response.content)
+    are_jobs_available = more_jobs_available(soup)
+    jobs_search_card_data = None
+    print("Are jobs available - ", are_jobs_available)
+    if not are_jobs_available:
+        return jobs_search_card_data, False
+
     jobs_list = []
     
     if refresh:
@@ -107,16 +117,17 @@ def get_new_job_ids(total_jobs_loaded, refresh, posted_ago, title):
         
     jobs_search_card_data = helper_get_job_ids(jobs_list)
     
-    return jobs_search_card_data
+    return jobs_search_card_data, True
 
 
 def get_new_jobs(new_jobs_needed, refresh=True, posted_ago='week', title='data_scientist'):
     new_job_ids = dict()
     total_jobs_loaded, new_jobs_loaded = 0, 0
     existing_job_ids = set(rds_get_job_ids()) # using set reduces the time complexity to find existing job ids
+    are_jobs_available = True
 
-    while new_jobs_loaded < new_jobs_needed:
-        jobs_search_card_data = get_new_job_ids(total_jobs_loaded, refresh, posted_ago, title)
+    while (new_jobs_loaded < new_jobs_needed) and (total_jobs_loaded < 1000) and (are_jobs_available):
+        jobs_search_card_data, are_jobs_available = get_new_job_ids(total_jobs_loaded, refresh, posted_ago, title)
         total_jobs_loaded += 25
 
         for job_id in jobs_search_card_data:
